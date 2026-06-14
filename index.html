@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
   <title>Nu Skin CRM</title>
 
   <style>
@@ -15,12 +16,12 @@
     }
 
     .container {
-      max-width: 500px;
+      max-width: 650px;
       margin: 0 auto;
       background: white;
       padding: 25px;
-      border-radius: 12px;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+      border-radius: 16px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.06);
     }
 
     .header-bar {
@@ -32,17 +33,32 @@
 
     h1 {
       color: #0082c6;
-      font-size: 22px;
+      font-size: 26px;
       margin: 0;
+    }
+
+    h2 {
+      color: #0f172a;
+      font-size: 20px;
+      margin-top: 35px;
+      margin-bottom: 12px;
     }
 
     .lang-btn {
       background: #e2e8f0;
       border: none;
-      padding: 6px 12px;
+      padding: 8px 14px;
       border-radius: 20px;
       font-weight: bold;
       cursor: pointer;
+    }
+
+    .section-card {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      padding: 18px;
+      border-radius: 12px;
+      margin-bottom: 20px;
     }
 
     .radio-group {
@@ -51,7 +67,7 @@
       margin-bottom: 20px;
       background: #f8fafc;
       padding: 15px;
-      border-radius: 8px;
+      border-radius: 12px;
       flex-wrap: wrap;
       align-items: center;
     }
@@ -59,7 +75,7 @@
     .radio-option {
       display: flex;
       align-items: center;
-      gap: 6px;
+      gap: 8px;
     }
 
     .radio-option input {
@@ -70,26 +86,36 @@
     .radio-option label {
       display: inline;
       margin: 0;
-      font-size: 14px;
+      font-size: 15px;
       font-weight: 700;
     }
 
     label {
       display: block;
       font-size: 13px;
-      font-weight: 600;
-      margin-bottom: 5px;
+      font-weight: 700;
+      margin-bottom: 6px;
       color: #475569;
     }
 
     input, select {
       width: 100%;
-      padding: 10px;
+      padding: 11px;
       margin-bottom: 15px;
       border: 1px solid #cbd5e1;
-      border-radius: 6px;
+      border-radius: 8px;
       box-sizing: border-box;
       font-size: 15px;
+      background: white;
+    }
+
+    .row {
+      display: flex;
+      gap: 12px;
+    }
+
+    .col {
+      flex: 1;
     }
 
     button.primary {
@@ -97,14 +123,26 @@
       background: #0082c6;
       color: white;
       border: none;
-      padding: 12px;
-      border-radius: 6px;
+      padding: 13px;
+      border-radius: 8px;
       font-size: 16px;
       font-weight: bold;
       cursor: pointer;
     }
 
-    button.primary:disabled {
+    button.secondary {
+      width: 100%;
+      background: #0f172a;
+      color: white;
+      border: none;
+      padding: 13px;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    button:disabled {
       background: #94a3b8;
       cursor: not-allowed;
     }
@@ -115,7 +153,7 @@
       background: #dcfce3;
       color: #166534;
       text-align: center;
-      border-radius: 6px;
+      border-radius: 8px;
       font-weight: bold;
       margin-top: 15px;
     }
@@ -126,9 +164,79 @@
       background: #fee2e2;
       color: #991b1b;
       text-align: center;
-      border-radius: 6px;
+      border-radius: 8px;
       font-weight: bold;
       margin-top: 15px;
+    }
+
+    #dashboardResult {
+      display: none;
+      margin-top: 18px;
+    }
+
+    .customer-box {
+      background: #eef6ff;
+      border: 1px solid #bfdbfe;
+      padding: 15px;
+      border-radius: 10px;
+      margin-bottom: 15px;
+    }
+
+    .customer-box p {
+      margin: 6px 0;
+      font-size: 14px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 12px;
+      font-size: 13px;
+    }
+
+    th, td {
+      border: 1px solid #e2e8f0;
+      padding: 9px;
+      text-align: left;
+    }
+
+    th {
+      background: #f1f5f9;
+      font-weight: 700;
+    }
+
+    .summary-row {
+      background: #f8fafc;
+      padding: 12px;
+      border-radius: 10px;
+      margin-top: 12px;
+      font-weight: bold;
+    }
+
+    .small-note {
+      color: #64748b;
+      font-size: 13px;
+      margin-top: -5px;
+      margin-bottom: 15px;
+    }
+
+    @media (max-width: 600px) {
+      .row {
+        flex-direction: column;
+        gap: 0;
+      }
+
+      h1 {
+        font-size: 22px;
+      }
+
+      table {
+        font-size: 12px;
+      }
+
+      th, td {
+        padding: 7px;
+      }
     }
   </style>
 </head>
@@ -136,10 +244,13 @@
 <body>
 
 <div class="container">
+
   <div class="header-bar">
     <h1 id="titleText">Nu Skin CRM</h1>
     <button class="lang-btn" onclick="toggleLang()" id="langBtn">EN / TH</button>
   </div>
+
+  <h2 id="formTitle">Add Customer / Order</h2>
 
   <div class="radio-group">
     <div class="radio-option">
@@ -159,8 +270,8 @@
     <input type="text" id="name" required placeholder="Enter new customer full name">
 
     <div id="newCustFields">
-      <div style="display:flex; gap:10px;">
-        <div style="flex:1;">
+      <div class="row">
+        <div class="col">
           <label id="lblSex">Sex</label>
           <select id="sex">
             <option value="F" id="optFemale">Female</option>
@@ -168,7 +279,7 @@
           </select>
         </div>
 
-        <div style="flex:1;">
+        <div class="col">
           <label id="lblAge">Age</label>
           <input type="number" id="age">
         </div>
@@ -193,13 +304,13 @@
     <label id="lblProd">Product Name</label>
     <input type="text" id="product" required>
 
-    <div style="display:flex; gap:10px;">
-      <div style="flex:1;">
+    <div class="row">
+      <div class="col">
         <label id="lblQty">Amount</label>
         <input type="number" id="qty" required value="1">
       </div>
 
-      <div style="flex:1;">
+      <div class="col">
         <label id="lblCost">Total Cost</label>
         <input type="number" id="total" required>
       </div>
@@ -213,7 +324,27 @@
 
   <div id="successMsg">Data Saved!</div>
   <div id="errorMsg"></div>
+
+
+  <h2 id="dashboardTitle">Customer Dashboard</h2>
+
+  <div class="section-card">
+    <label id="lblSearchName">Search Customer Name</label>
+    <input type="text" id="dashboardName" placeholder="Enter customer full name">
+
+    <p class="small-note" id="dashboardNote">
+      Type the exact customer name to see product order history from the past 6 months.
+    </p>
+
+    <button type="button" class="secondary" id="btnDashboard" onclick="loadDashboard()">
+      Show Dashboard
+    </button>
+
+    <div id="dashboardResult"></div>
+  </div>
+
 </div>
+
 
 <script>
   const GOOGLE_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyLL-wNiC2ZBdfkwFzYukfPCc_yx6UMbIIuO33BGZpS_ZxvQ65hEzcOzuEfS7RJ21Nt/exec";
@@ -223,6 +354,7 @@
   const text = {
     EN: {
       title: "Nu Skin CRM",
+      formTitle: "Add Customer / Order",
       newCustomer: "New Customer",
       existingCustomer: "Existing Customer",
       fullName: "Full Name",
@@ -243,10 +375,23 @@
       runOut: "Run Out (Months)",
       save: "Save Order & Set Calendar",
       saved: "Data Saved!",
-      saving: "Saving..."
+      saving: "Saving...",
+      dashboardTitle: "Customer Dashboard",
+      searchName: "Search Customer Name",
+      dashboardPlaceholder: "Enter customer full name",
+      dashboardNote: "Type the exact customer name to see product order history from the past 6 months.",
+      showDashboard: "Show Dashboard",
+      loading: "Loading...",
+      notFound: "Customer not found.",
+      customerInfo: "Customer Information",
+      orderHistory: "Product Order History - Past 6 Months",
+      noOrders: "No orders found in the past 6 months.",
+      totalSpent: "Total Spent",
+      totalQty: "Total Quantity"
     },
     TH: {
       title: "Nu Skin CRM",
+      formTitle: "เพิ่มลูกค้า / เพิ่มออเดอร์",
       newCustomer: "ลูกค้าใหม่",
       existingCustomer: "ลูกค้าเดิม",
       fullName: "ชื่อ-นามสกุล",
@@ -267,7 +412,19 @@
       runOut: "สินค้าหมดในกี่เดือน",
       save: "บันทึกออเดอร์และตั้งเตือน",
       saved: "บันทึกข้อมูลแล้ว!",
-      saving: "กำลังบันทึก..."
+      saving: "กำลังบันทึก...",
+      dashboardTitle: "Dashboard ลูกค้า",
+      searchName: "ค้นหาชื่อลูกค้า",
+      dashboardPlaceholder: "กรอกชื่อ-นามสกุลลูกค้า",
+      dashboardNote: "กรอกชื่อลูกค้าให้ตรง เพื่อดูประวัติการซื้อย้อนหลัง 6 เดือน",
+      showDashboard: "แสดง Dashboard",
+      loading: "กำลังโหลด...",
+      notFound: "ไม่พบลูกค้า",
+      customerInfo: "ข้อมูลลูกค้า",
+      orderHistory: "ประวัติการซื้อสินค้า ย้อนหลัง 6 เดือน",
+      noOrders: "ไม่พบออเดอร์ย้อนหลัง 6 เดือน",
+      totalSpent: "ยอดซื้อรวม",
+      totalQty: "จำนวนรวม"
     }
   };
 
@@ -305,6 +462,7 @@
     const t = text[currentLang];
 
     document.getElementById("titleText").innerText = t.title;
+    document.getElementById("formTitle").innerText = t.formTitle;
     document.getElementById("lblNew").innerText = t.newCustomer;
     document.getElementById("lblExist").innerText = t.existingCustomer;
     document.getElementById("lblName").innerText = t.fullName;
@@ -324,10 +482,20 @@
     document.getElementById("btnSave").innerText = t.save;
     document.getElementById("successMsg").innerText = t.saved;
 
+    document.getElementById("dashboardTitle").innerText = t.dashboardTitle;
+    document.getElementById("lblSearchName").innerText = t.searchName;
+    document.getElementById("dashboardName").placeholder = t.dashboardPlaceholder;
+    document.getElementById("dashboardNote").innerText = t.dashboardNote;
+    document.getElementById("btnDashboard").innerText = t.showDashboard;
+
     setupRunOutDropdown();
     toggleCustomerType();
   }
 
+
+  /****************************************************
+   * Save order form
+   ****************************************************/
   document.getElementById("crmForm").addEventListener("submit", function(e) {
     e.preventDefault();
 
@@ -366,10 +534,14 @@
     })
     .then(() => {
       successMsg.style.display = "block";
-      document.getElementById("crmForm").reset();
 
+      const savedName = data.name;
+
+      document.getElementById("crmForm").reset();
       document.getElementById("typeNew").checked = true;
       toggleCustomerType();
+
+      document.getElementById("dashboardName").value = savedName;
 
       btn.disabled = false;
       btn.innerText = text[currentLang].save;
@@ -386,6 +558,154 @@
       btn.innerText = text[currentLang].save;
     });
   });
+
+
+  /****************************************************
+   * Dashboard via JSONP
+   * This avoids CORS problem from Apps Script
+   ****************************************************/
+  function loadDashboard() {
+    const name = document.getElementById("dashboardName").value.trim();
+    const resultDiv = document.getElementById("dashboardResult");
+    const btn = document.getElementById("btnDashboard");
+
+    if (!name) {
+      alert(currentLang === "EN" ? "Please enter customer name." : "กรุณากรอกชื่อลูกค้า");
+      return;
+    }
+
+    btn.disabled = true;
+    btn.innerText = text[currentLang].loading;
+
+    resultDiv.style.display = "block";
+    resultDiv.innerHTML = "<p>" + text[currentLang].loading + "</p>";
+
+    const callbackName = "crmDashboardCallback_" + Date.now();
+
+    window[callbackName] = function(response) {
+      renderDashboard(response);
+
+      btn.disabled = false;
+      btn.innerText = text[currentLang].showDashboard;
+
+      delete window[callbackName];
+      script.remove();
+    };
+
+    const script = document.createElement("script");
+    script.src =
+      GOOGLE_WEB_APP_URL +
+      "?action=dashboard" +
+      "&name=" + encodeURIComponent(name) +
+      "&callback=" + callbackName;
+
+    script.onerror = function() {
+      resultDiv.innerHTML = "<p style='color:red;'>Dashboard loading error.</p>";
+      btn.disabled = false;
+      btn.innerText = text[currentLang].showDashboard;
+      delete window[callbackName];
+      script.remove();
+    };
+
+    document.body.appendChild(script);
+  }
+
+
+  function renderDashboard(response) {
+    const resultDiv = document.getElementById("dashboardResult");
+    const t = text[currentLang];
+
+    if (!response || response.status === "error") {
+      resultDiv.innerHTML = "<p style='color:red;'>" + (response ? response.message : "Error") + "</p>";
+      return;
+    }
+
+    if (response.status === "not_found") {
+      resultDiv.innerHTML = "<p style='color:red;'>" + t.notFound + "</p>";
+      return;
+    }
+
+    const customer = response.customer;
+    const orders = response.orders || [];
+
+    let html = "";
+
+    html += "<div class='customer-box'>";
+    html += "<h3>" + t.customerInfo + "</h3>";
+    html += "<p><strong>Name:</strong> " + safe(customer.fullName) + "</p>";
+    html += "<p><strong>Tel:</strong> " + safe(customer.tel) + "</p>";
+    html += "<p><strong>LINE:</strong> " + safe(customer.lineID) + "</p>";
+    html += "<p><strong>Health Goal:</strong> " + safe(customer.healthGoals) + "</p>";
+    html += "<p><strong>Health Problem:</strong> " + safe(customer.healthProblems) + "</p>";
+    html += "</div>";
+
+    html += "<h3>" + t.orderHistory + "</h3>";
+
+    if (orders.length === 0) {
+      html += "<p>" + t.noOrders + "</p>";
+      resultDiv.innerHTML = html;
+      return;
+    }
+
+    let totalSpent = 0;
+    let totalQty = 0;
+
+    html += "<table>";
+    html += "<tr>";
+    html += "<th>Date</th>";
+    html += "<th>Product</th>";
+    html += "<th>Qty</th>";
+    html += "<th>Total</th>";
+    html += "<th>Run Out</th>";
+    html += "</tr>";
+
+    orders.forEach(order => {
+      const orderTotal = Number(order.total || 0);
+      const orderQty = Number(order.quantity || 0);
+
+      totalSpent += orderTotal;
+      totalQty += orderQty;
+
+      html += "<tr>";
+      html += "<td>" + safe(order.orderDate) + "</td>";
+      html += "<td>" + safe(order.productName) + "</td>";
+      html += "<td>" + safe(order.quantity) + "</td>";
+      html += "<td>" + formatMoney(order.total) + "</td>";
+      html += "<td>" + safe(order.runOutDate) + "</td>";
+      html += "</tr>";
+    });
+
+    html += "</table>";
+
+    html += "<div class='summary-row'>";
+    html += t.totalQty + ": " + totalQty + " | ";
+    html += t.totalSpent + ": " + formatMoney(totalSpent);
+    html += "</div>";
+
+    resultDiv.innerHTML = html;
+  }
+
+
+  function safe(value) {
+    if (value === null || value === undefined) {
+      return "";
+    }
+
+    return String(value)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;");
+  }
+
+  function formatMoney(value) {
+    const number = Number(value || 0);
+
+    return number.toLocaleString("en-US", {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    });
+  }
+
 
   setupRunOutDropdown();
   toggleCustomerType();

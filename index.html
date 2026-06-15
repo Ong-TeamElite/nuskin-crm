@@ -16,7 +16,7 @@
     }
 
     .container {
-      max-width: 650px;
+      max-width: 700px;
       margin: 0 auto;
       background: white;
       padding: 25px;
@@ -42,6 +42,11 @@
       font-size: 20px;
       margin-top: 35px;
       margin-bottom: 12px;
+    }
+
+    h3 {
+      margin-top: 0;
+      color: #0f172a;
     }
 
     .lang-btn {
@@ -187,17 +192,24 @@
       font-size: 14px;
     }
 
+    .table-wrap {
+      width: 100%;
+      overflow-x: auto;
+    }
+
     table {
       width: 100%;
       border-collapse: collapse;
       margin-top: 12px;
       font-size: 13px;
+      background: white;
     }
 
     th, td {
       border: 1px solid #e2e8f0;
       padding: 9px;
       text-align: left;
+      white-space: nowrap;
     }
 
     th {
@@ -306,7 +318,7 @@
 
     <div class="row">
       <div class="col">
-        <label id="lblQty">Amount</label>
+        <label id="lblQty">Quantity</label>
         <input type="number" id="qty" required value="1">
       </div>
 
@@ -333,7 +345,7 @@
     <input type="text" id="dashboardName" placeholder="Enter customer full name">
 
     <p class="small-note" id="dashboardNote">
-      Type the exact customer name to see product order history from the past 6 months.
+      Type the exact customer name to see product order history from the past 24 months.
     </p>
 
     <button type="button" class="secondary" id="btnDashboard" onclick="loadDashboard()">
@@ -370,7 +382,7 @@
       healthProblem: "Health Problem",
       healthGoal: "Health Goal",
       product: "Product Name",
-      amount: "Amount",
+      quantity: "Quantity",
       totalCost: "Total Cost",
       runOut: "Run Out (Months)",
       save: "Save Order & Set Calendar",
@@ -379,15 +391,20 @@
       dashboardTitle: "Customer Dashboard",
       searchName: "Search Customer Name",
       dashboardPlaceholder: "Enter customer full name",
-      dashboardNote: "Type the exact customer name to see product order history from the past 6 months.",
+      dashboardNote: "Type the exact customer name to see product order history from the past 24 months.",
       showDashboard: "Show Dashboard",
       loading: "Loading...",
       notFound: "Customer not found.",
       customerInfo: "Customer Information",
-      orderHistory: "Product Order History - Past 6 Months",
-      noOrders: "No orders found in the past 6 months.",
+      orderHistory: "Product Order History - Past 24 Months",
+      noOrders: "No orders found in the past 24 months.",
       totalSpent: "Total Spent",
-      totalQty: "Total Quantity"
+      totalQty: "Total Quantity",
+      date: "Date",
+      productCol: "Product",
+      qtyCol: "Qty",
+      totalCol: "Total",
+      runOutCol: "Run Out"
     },
     TH: {
       title: "Nu Skin CRM",
@@ -407,7 +424,7 @@
       healthProblem: "ปัญหาสุขภาพ",
       healthGoal: "เป้าหมายสุขภาพ",
       product: "ชื่อสินค้า",
-      amount: "จำนวน",
+      quantity: "จำนวน",
       totalCost: "ยอดรวม",
       runOut: "สินค้าหมดในกี่เดือน",
       save: "บันทึกออเดอร์และตั้งเตือน",
@@ -416,15 +433,20 @@
       dashboardTitle: "Dashboard ลูกค้า",
       searchName: "ค้นหาชื่อลูกค้า",
       dashboardPlaceholder: "กรอกชื่อ-นามสกุลลูกค้า",
-      dashboardNote: "กรอกชื่อลูกค้าให้ตรง เพื่อดูประวัติการซื้อย้อนหลัง 6 เดือน",
+      dashboardNote: "กรอกชื่อลูกค้าให้ตรง เพื่อดูประวัติการซื้อย้อนหลัง 24 เดือน",
       showDashboard: "แสดง Dashboard",
       loading: "กำลังโหลด...",
       notFound: "ไม่พบลูกค้า",
       customerInfo: "ข้อมูลลูกค้า",
-      orderHistory: "ประวัติการซื้อสินค้า ย้อนหลัง 6 เดือน",
-      noOrders: "ไม่พบออเดอร์ย้อนหลัง 6 เดือน",
+      orderHistory: "ประวัติการซื้อสินค้า ย้อนหลัง 24 เดือน",
+      noOrders: "ไม่พบออเดอร์ย้อนหลัง 24 เดือน",
       totalSpent: "ยอดซื้อรวม",
-      totalQty: "จำนวนรวม"
+      totalQty: "จำนวนรวม",
+      date: "วันที่",
+      productCol: "สินค้า",
+      qtyCol: "จำนวน",
+      totalCol: "ยอดรวม",
+      runOutCol: "วันสินค้าหมด"
     }
   };
 
@@ -476,7 +498,7 @@
     document.getElementById("lblProb").innerText = t.healthProblem;
     document.getElementById("lblGoal").innerText = t.healthGoal;
     document.getElementById("lblProd").innerText = t.product;
-    document.getElementById("lblQty").innerText = t.amount;
+    document.getElementById("lblQty").innerText = t.quantity;
     document.getElementById("lblCost").innerText = t.totalCost;
     document.getElementById("lblRunOut").innerText = t.runOut;
     document.getElementById("btnSave").innerText = t.save;
@@ -650,13 +672,14 @@
     let totalSpent = 0;
     let totalQty = 0;
 
+    html += "<div class='table-wrap'>";
     html += "<table>";
     html += "<tr>";
-    html += "<th>Date</th>";
-    html += "<th>Product</th>";
-    html += "<th>Qty</th>";
-    html += "<th>Total</th>";
-    html += "<th>Run Out</th>";
+    html += "<th>" + t.date + "</th>";
+    html += "<th>" + t.productCol + "</th>";
+    html += "<th>" + t.qtyCol + "</th>";
+    html += "<th>" + t.totalCol + "</th>";
+    html += "<th>" + t.runOutCol + "</th>";
     html += "</tr>";
 
     orders.forEach(order => {
@@ -676,6 +699,7 @@
     });
 
     html += "</table>";
+    html += "</div>";
 
     html += "<div class='summary-row'>";
     html += t.totalQty + ": " + totalQty + " | ";

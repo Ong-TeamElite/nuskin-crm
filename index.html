@@ -187,6 +187,17 @@
       margin-top: 15px;
     }
 
+    #customerLoadMsg {
+      display: none;
+      padding: 12px;
+      background: #fff7ed;
+      color: #9a3412;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 700;
+      margin-bottom: 15px;
+    }
+
     #dashboardResult {
       display: none;
       margin-top: 18px;
@@ -288,6 +299,8 @@
       <label for="typeExist" id="lblExist">Existing Customer</label>
     </div>
   </div>
+
+  <div id="customerLoadMsg"></div>
 
   <form id="crmForm">
 
@@ -442,7 +455,9 @@
       productCol: "Product",
       qtyCol: "Qty",
       totalCol: "Total",
-      runOutCol: "Run Out"
+      runOutCol: "Run Out",
+      customerListLoaded: "Customer list loaded",
+      customerListError: "Cannot load customer list. Please check Apps Script deployment and run testCustomerList."
     },
     TH: {
       title: "Nu Skin CRM",
@@ -487,7 +502,9 @@
       productCol: "สินค้า",
       qtyCol: "จำนวน",
       totalCol: "ยอดรวม",
-      runOutCol: "วันสินค้าหมด"
+      runOutCol: "วันสินค้าหมด",
+      customerListLoaded: "โหลดรายชื่อลูกค้าแล้ว",
+      customerListError: "โหลดรายชื่อลูกค้าไม่ได้ กรุณาเช็ค Apps Script deployment และ run testCustomerList"
     }
   };
 
@@ -575,14 +592,23 @@
    ****************************************************/
   function refreshCustomerList() {
     const callbackName = "crmCustomersCallback_" + Date.now();
+    const script = document.createElement("script");
 
     setCustomerDropdownLoading();
+    showCustomerLoadMsg("");
 
     window[callbackName] = function(response) {
       if (response && response.status === "success") {
         customerList = response.customers || [];
+
+        if (customerList.length > 0) {
+          showCustomerLoadMsg(text[currentLang].customerListLoaded + ": " + customerList.length, "success");
+        } else {
+          showCustomerLoadMsg(text[currentLang].noCustomers, "warning");
+        }
       } else {
         customerList = [];
+        showCustomerLoadMsg(text[currentLang].customerListError, "warning");
       }
 
       populateCustomerDropdowns();
@@ -591,20 +617,47 @@
       script.remove();
     };
 
-    const script = document.createElement("script");
     script.src =
       GOOGLE_WEB_APP_URL +
       "?action=customers" +
-      "&callback=" + callbackName;
+      "&callback=" + callbackName +
+      "&t=" + Date.now();
 
     script.onerror = function() {
       customerList = [];
       populateCustomerDropdowns();
+      showCustomerLoadMsg(text[currentLang].customerListError, "warning");
       delete window[callbackName];
       script.remove();
     };
 
     document.body.appendChild(script);
+  }
+
+
+  function showCustomerLoadMsg(message, type) {
+    const box = document.getElementById("customerLoadMsg");
+
+    if (!message) {
+      box.style.display = "none";
+      box.innerText = "";
+      return;
+    }
+
+    box.style.display = "block";
+    box.innerText = message;
+
+    if (type === "success") {
+      box.style.background = "#dcfce3";
+      box.style.color = "#166534";
+    } else {
+      box.style.background = "#fff7ed";
+      box.style.color = "#9a3412";
+    }
+
+    setTimeout(function() {
+      box.style.display = "none";
+    }, 5000);
   }
 
 
@@ -624,6 +677,9 @@
 
     const existingSelect = document.getElementById("existingCustomerSelect");
     const dashboardSelect = document.getElementById("dashboardCustomerSelect");
+
+    const existingValue = existingSelect.value;
+    const dashboardValue = dashboardSelect.value;
 
     existingSelect.innerHTML = "";
     dashboardSelect.innerHTML = "";
@@ -657,6 +713,15 @@
       option2.textContent = name;
       dashboardSelect.appendChild(option2);
     });
+
+    if (existingValue) {
+      existingSelect.value = existingValue;
+    }
+
+    if (dashboardValue) {
+      dashboardSelect.value = dashboardValue;
+      selectDashboardCustomer();
+    }
   }
 
 
@@ -774,6 +839,7 @@
     resultDiv.innerHTML = "<p>" + text[currentLang].loading + "</p>";
 
     const callbackName = "crmDashboardCallback_" + Date.now();
+    const script = document.createElement("script");
 
     window[callbackName] = function(response) {
       renderDashboard(response);
@@ -785,12 +851,12 @@
       script.remove();
     };
 
-    const script = document.createElement("script");
     script.src =
       GOOGLE_WEB_APP_URL +
       "?action=dashboard" +
       "&name=" + encodeURIComponent(name) +
-      "&callback=" + callbackName;
+      "&callback=" + callbackName +
+      "&t=" + Date.now();
 
     script.onerror = function() {
       resultDiv.innerHTML = "<p style='color:red;'>Dashboard loading error.</p>";

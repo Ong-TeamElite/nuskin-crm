@@ -147,6 +147,19 @@
       cursor: pointer;
     }
 
+    button.small-btn {
+      width: 100%;
+      background: #e2e8f0;
+      color: #0f172a;
+      border: none;
+      padding: 10px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: bold;
+      cursor: pointer;
+      margin-bottom: 15px;
+    }
+
     button:disabled {
       background: #94a3b8;
       cursor: not-allowed;
@@ -278,8 +291,21 @@
 
   <form id="crmForm">
 
-    <label id="lblName">Full Name</label>
-    <input type="text" id="name" required placeholder="Enter new customer full name">
+    <div id="manualNameBox">
+      <label id="lblName">Full Name</label>
+      <input type="text" id="name" required placeholder="Enter new customer full name">
+    </div>
+
+    <div id="existingCustomerBox" style="display:none;">
+      <label id="lblExistingSelect">Choose Existing Customer</label>
+      <select id="existingCustomerSelect" onchange="selectExistingCustomer()">
+        <option value="">Loading customers...</option>
+      </select>
+
+      <button type="button" class="small-btn" onclick="refreshCustomerList()" id="btnRefreshCustomers">
+        Refresh Customer List
+      </button>
+    </div>
 
     <div id="newCustFields">
       <div class="row">
@@ -341,11 +367,19 @@
   <h2 id="dashboardTitle">Customer Dashboard</h2>
 
   <div class="section-card">
-    <label id="lblSearchName">Search Customer Name</label>
-    <input type="text" id="dashboardName" placeholder="Enter customer full name">
+    <label id="lblDashboardSelect">Choose Customer</label>
+    <select id="dashboardCustomerSelect" onchange="selectDashboardCustomer()">
+      <option value="">Loading customers...</option>
+    </select>
+
+    <button type="button" class="small-btn" onclick="refreshCustomerList()" id="btnRefreshDashboard">
+      Refresh Customer List
+    </button>
+
+    <input type="hidden" id="dashboardName">
 
     <p class="small-note" id="dashboardNote">
-      Type the exact customer name to see product order history from the past 24 months.
+      Choose a customer to see product order history from the past 24 months.
     </p>
 
     <button type="button" class="secondary" id="btnDashboard" onclick="loadDashboard()">
@@ -362,6 +396,7 @@
   const GOOGLE_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyLL-wNiC2ZBdfkwFzYukfPCc_yx6UMbIIuO33BGZpS_ZxvQ65hEzcOzuEfS7RJ21Nt/exec";
 
   let currentLang = "EN";
+  let customerList = [];
 
   const text = {
     EN: {
@@ -370,8 +405,13 @@
       newCustomer: "New Customer",
       existingCustomer: "Existing Customer",
       fullName: "Full Name",
+      chooseExisting: "Choose Existing Customer",
+      chooseCustomer: "Choose Customer",
+      refreshCustomers: "Refresh Customer List",
+      loadingCustomers: "Loading customers...",
+      noCustomers: "No customers found",
+      selectCustomer: "Select customer",
       newNamePlaceholder: "Enter new customer full name",
-      existingNamePlaceholder: "Enter existing customer full name",
       sex: "Sex",
       female: "Female",
       male: "Male",
@@ -389,9 +429,7 @@
       saved: "Data Saved!",
       saving: "Saving...",
       dashboardTitle: "Customer Dashboard",
-      searchName: "Search Customer Name",
-      dashboardPlaceholder: "Enter customer full name",
-      dashboardNote: "Type the exact customer name to see product order history from the past 24 months.",
+      dashboardNote: "Choose a customer to see product order history from the past 24 months.",
       showDashboard: "Show Dashboard",
       loading: "Loading...",
       notFound: "Customer not found.",
@@ -412,8 +450,13 @@
       newCustomer: "ลูกค้าใหม่",
       existingCustomer: "ลูกค้าเดิม",
       fullName: "ชื่อ-นามสกุล",
+      chooseExisting: "เลือกลูกค้าเดิม",
+      chooseCustomer: "เลือกลูกค้า",
+      refreshCustomers: "อัปเดตรายชื่อลูกค้า",
+      loadingCustomers: "กำลังโหลดรายชื่อลูกค้า...",
+      noCustomers: "ยังไม่มีรายชื่อลูกค้า",
+      selectCustomer: "เลือกลูกค้า",
       newNamePlaceholder: "กรอกชื่อลูกค้าใหม่",
-      existingNamePlaceholder: "กรอกชื่อลูกค้าเดิม",
       sex: "เพศ",
       female: "หญิง",
       male: "ชาย",
@@ -431,9 +474,7 @@
       saved: "บันทึกข้อมูลแล้ว!",
       saving: "กำลังบันทึก...",
       dashboardTitle: "Dashboard ลูกค้า",
-      searchName: "ค้นหาชื่อลูกค้า",
-      dashboardPlaceholder: "กรอกชื่อ-นามสกุลลูกค้า",
-      dashboardNote: "กรอกชื่อลูกค้าให้ตรง เพื่อดูประวัติการซื้อย้อนหลัง 24 เดือน",
+      dashboardNote: "เลือกลูกค้าเพื่อดูประวัติการซื้อย้อนหลัง 24 เดือน",
       showDashboard: "แสดง Dashboard",
       loading: "กำลังโหลด...",
       notFound: "ไม่พบลูกค้า",
@@ -452,6 +493,7 @@
 
   const runOutSelect = document.getElementById("runOut");
 
+
   function setupRunOutDropdown() {
     runOutSelect.innerHTML = "";
 
@@ -463,22 +505,31 @@
     }
   }
 
+
   function toggleCustomerType() {
     const isNew = document.getElementById("typeNew").checked;
 
+    document.getElementById("manualNameBox").style.display = isNew ? "block" : "none";
+    document.getElementById("existingCustomerBox").style.display = isNew ? "none" : "block";
     document.getElementById("newCustFields").style.display = isNew ? "block" : "none";
 
     if (isNew) {
+      document.getElementById("name").required = true;
       document.getElementById("name").placeholder = text[currentLang].newNamePlaceholder;
+      document.getElementById("existingCustomerSelect").required = false;
     } else {
-      document.getElementById("name").placeholder = text[currentLang].existingNamePlaceholder;
+      document.getElementById("name").required = false;
+      document.getElementById("existingCustomerSelect").required = true;
+      selectExistingCustomer();
     }
   }
+
 
   function toggleLang() {
     currentLang = currentLang === "EN" ? "TH" : "EN";
     applyLanguage();
   }
+
 
   function applyLanguage() {
     const t = text[currentLang];
@@ -488,6 +539,11 @@
     document.getElementById("lblNew").innerText = t.newCustomer;
     document.getElementById("lblExist").innerText = t.existingCustomer;
     document.getElementById("lblName").innerText = t.fullName;
+    document.getElementById("lblExistingSelect").innerText = t.chooseExisting;
+    document.getElementById("lblDashboardSelect").innerText = t.chooseCustomer;
+    document.getElementById("btnRefreshCustomers").innerText = t.refreshCustomers;
+    document.getElementById("btnRefreshDashboard").innerText = t.refreshCustomers;
+
     document.getElementById("lblSex").innerText = t.sex;
     document.getElementById("optFemale").innerText = t.female;
     document.getElementById("optMale").innerText = t.male;
@@ -505,13 +561,114 @@
     document.getElementById("successMsg").innerText = t.saved;
 
     document.getElementById("dashboardTitle").innerText = t.dashboardTitle;
-    document.getElementById("lblSearchName").innerText = t.searchName;
-    document.getElementById("dashboardName").placeholder = t.dashboardPlaceholder;
     document.getElementById("dashboardNote").innerText = t.dashboardNote;
     document.getElementById("btnDashboard").innerText = t.showDashboard;
 
     setupRunOutDropdown();
+    populateCustomerDropdowns();
     toggleCustomerType();
+  }
+
+
+  /****************************************************
+   * Load customer names from Google Sheet
+   ****************************************************/
+  function refreshCustomerList() {
+    const callbackName = "crmCustomersCallback_" + Date.now();
+
+    setCustomerDropdownLoading();
+
+    window[callbackName] = function(response) {
+      if (response && response.status === "success") {
+        customerList = response.customers || [];
+      } else {
+        customerList = [];
+      }
+
+      populateCustomerDropdowns();
+
+      delete window[callbackName];
+      script.remove();
+    };
+
+    const script = document.createElement("script");
+    script.src =
+      GOOGLE_WEB_APP_URL +
+      "?action=customers" +
+      "&callback=" + callbackName;
+
+    script.onerror = function() {
+      customerList = [];
+      populateCustomerDropdowns();
+      delete window[callbackName];
+      script.remove();
+    };
+
+    document.body.appendChild(script);
+  }
+
+
+  function setCustomerDropdownLoading() {
+    const t = text[currentLang];
+
+    document.getElementById("existingCustomerSelect").innerHTML =
+      "<option value=''>" + t.loadingCustomers + "</option>";
+
+    document.getElementById("dashboardCustomerSelect").innerHTML =
+      "<option value=''>" + t.loadingCustomers + "</option>";
+  }
+
+
+  function populateCustomerDropdowns() {
+    const t = text[currentLang];
+
+    const existingSelect = document.getElementById("existingCustomerSelect");
+    const dashboardSelect = document.getElementById("dashboardCustomerSelect");
+
+    existingSelect.innerHTML = "";
+    dashboardSelect.innerHTML = "";
+
+    if (!customerList || customerList.length === 0) {
+      existingSelect.innerHTML = "<option value=''>" + t.noCustomers + "</option>";
+      dashboardSelect.innerHTML = "<option value=''>" + t.noCustomers + "</option>";
+      return;
+    }
+
+    const defaultOption1 = document.createElement("option");
+    defaultOption1.value = "";
+    defaultOption1.textContent = t.selectCustomer;
+    existingSelect.appendChild(defaultOption1);
+
+    const defaultOption2 = document.createElement("option");
+    defaultOption2.value = "";
+    defaultOption2.textContent = t.selectCustomer;
+    dashboardSelect.appendChild(defaultOption2);
+
+    customerList.forEach(function(customer) {
+      const name = customer.fullName || "";
+
+      const option1 = document.createElement("option");
+      option1.value = name;
+      option1.textContent = name;
+      existingSelect.appendChild(option1);
+
+      const option2 = document.createElement("option");
+      option2.value = name;
+      option2.textContent = name;
+      dashboardSelect.appendChild(option2);
+    });
+  }
+
+
+  function selectExistingCustomer() {
+    const selectedName = document.getElementById("existingCustomerSelect").value;
+    document.getElementById("name").value = selectedName;
+  }
+
+
+  function selectDashboardCustomer() {
+    const selectedName = document.getElementById("dashboardCustomerSelect").value;
+    document.getElementById("dashboardName").value = selectedName;
   }
 
 
@@ -520,6 +677,19 @@
    ****************************************************/
   document.getElementById("crmForm").addEventListener("submit", function(e) {
     e.preventDefault();
+
+    const isNew = document.getElementById("typeNew").checked;
+
+    if (!isNew) {
+      selectExistingCustomer();
+    }
+
+    const selectedName = document.getElementById("name").value.trim();
+
+    if (!selectedName) {
+      alert(currentLang === "EN" ? "Please choose customer." : "กรุณาเลือกลูกค้า");
+      return;
+    }
 
     const btn = document.getElementById("btnSave");
     const successMsg = document.getElementById("successMsg");
@@ -531,8 +701,8 @@
     errorMsg.style.display = "none";
 
     const data = {
-      isNew: document.getElementById("typeNew").checked,
-      name: document.getElementById("name").value.trim(),
+      isNew: isNew,
+      name: selectedName,
       sex: document.getElementById("sex").value,
       age: document.getElementById("age").value,
       phone: document.getElementById("phone").value,
@@ -557,16 +727,16 @@
     .then(() => {
       successMsg.style.display = "block";
 
-      const savedName = data.name;
-
       document.getElementById("crmForm").reset();
       document.getElementById("typeNew").checked = true;
       toggleCustomerType();
 
-      document.getElementById("dashboardName").value = savedName;
+      document.getElementById("dashboardName").value = selectedName;
 
       btn.disabled = false;
       btn.innerText = text[currentLang].save;
+
+      refreshCustomerList();
 
       setTimeout(() => {
         successMsg.style.display = "none";
@@ -584,15 +754,16 @@
 
   /****************************************************
    * Dashboard via JSONP
-   * This avoids CORS problem from Apps Script
    ****************************************************/
   function loadDashboard() {
+    selectDashboardCustomer();
+
     const name = document.getElementById("dashboardName").value.trim();
     const resultDiv = document.getElementById("dashboardResult");
     const btn = document.getElementById("btnDashboard");
 
     if (!name) {
-      alert(currentLang === "EN" ? "Please enter customer name." : "กรุณากรอกชื่อลูกค้า");
+      alert(currentLang === "EN" ? "Please choose customer." : "กรุณาเลือกลูกค้า");
       return;
     }
 
@@ -721,6 +892,7 @@
       .replace(/>/g, "&gt;");
   }
 
+
   function formatMoney(value) {
     const number = Number(value || 0);
 
@@ -733,6 +905,7 @@
 
   setupRunOutDropdown();
   toggleCustomerType();
+  refreshCustomerList();
 </script>
 
 </body>
